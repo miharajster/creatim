@@ -5,6 +5,7 @@ require_once __DIR__ . '/../../lib/Order.php';
 require_once __DIR__ . '/../../lib/Cart.php';
 require_once __DIR__ . '/../../lib/PdoConnector.php';
 require_once __DIR__ . '/../../lib/Whitelist.php';
+require_once __DIR__ . '/../../lib/Sms.php';
 
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
@@ -85,6 +86,11 @@ try {
     if ($result === null) {
         sendError(400, 'Failed to submit order. Invalid session or empty cart.');
     }
+    
+    // Store SMS notification for sending
+    $sms = new Sms();
+    $smsContent = 'Thank you for your order! Your order will be processed as soon as possible by our team. - Creatim';
+    $sms->storeToSMS((int)$customerPhone, $smsContent);
     
     $result = Whitelist::apply($result, $orderWhitelist);
     sendSuccess($result, 'Order submitted successfully');
