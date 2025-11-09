@@ -1,0 +1,20 @@
+// Section component
+.c-section {
+  padding: $spacing-xl 0;
+  
+  &__header {
+    text-align: center;
+    margin-bottom: $spacing-lg;
+  }
+  
+  &__title {
+    font-size: $font-size-xlarge * 1.2;
+    color: $color-secondary;
+    margin-bottom: $spacing-sm;
+  }
+  
+  &__subtitle {
+    color: $color-gray-dark;
+    font-size: $font-size-base;
+  }
+}

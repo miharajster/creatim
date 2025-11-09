@@ -1,0 +1,38 @@
+// Card component
+.c-card {
+  @include card;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  
+  &__title {
+    font-size: $font-size-large;
+    font-weight: 600;
+    margin-bottom: $spacing-sm;
+    color: $color-secondary;
+  }
+  
+  &__description {
+    flex-grow: 1;
+    margin-bottom: $spacing-md;
+    color: $color-gray-dark;
+    line-height: 1.5;
+  }
+  
+  &__price {
+    font-size: $font-size-large;
+    font-weight: bold;
+    color: $color-primary;
+    margin-bottom: $spacing-md;
+  }
+  
+  &__button {
+    @include button($color-primary);
+    width: 100%;
+    text-align: center;
+    
+    i {
+      margin-right: $spacing-xs;
+    }
+  }
+}

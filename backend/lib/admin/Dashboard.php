@@ -30,6 +30,58 @@ class Dashboard
         $this->loadData();
     }
 
+    private function validateArticle(array $data): void
+    {
+        if (empty($data['name']) || !is_string($data['name'])) {
+            throw new Exception('Name must be a non-empty text');
+        }
+        if (empty($data['description']) || !is_string($data['description'])) {
+            throw new Exception('Description must be a non-empty text');
+        }
+        if (!isset($data['price']) || !is_numeric($data['price']) || $data['price'] < 0) {
+            throw new Exception('Price must be a positive number');
+        }
+        if (empty($data['supplier_email']) || !filter_var($data['supplier_email'], FILTER_VALIDATE_EMAIL)) {
+            throw new Exception('Supplier email must be a valid email address');
+        }
+    }
+
+    private function validateSubscription(array $data): void
+    {
+        if (empty($data['description']) || !is_string($data['description'])) {
+            throw new Exception('Description must be a non-empty text');
+        }
+        if (!isset($data['price']) || !is_numeric($data['price']) || $data['price'] < 0) {
+            throw new Exception('Price must be a positive number');
+        }
+        if (!isset($data['physical']) || !in_array((int)$data['physical'], [0, 1], true)) {
+            throw new Exception('Type must be 0 (Digital) or 1 (Physical)');
+        }
+    }
+
+    private function validateOrder(array $data): void
+    {
+        if (!isset($data['order_number']) || !is_numeric($data['order_number']) || $data['order_number'] <= 0) {
+            throw new Exception('Order number must be a positive integer');
+        }
+        if (!empty($data['customer_phone']) && !is_numeric($data['customer_phone'])) {
+            throw new Exception('Customer phone must be a number');
+        }
+        if (empty($data['status']) || !is_string($data['status'])) {
+            throw new Exception('Status must be a non-empty text');
+        }
+        if (!isset($data['price']) || !is_numeric($data['price']) || $data['price'] < 0) {
+            throw new Exception('Price must be a positive number');
+        }
+        // Articles and subscription_pkg are optional text fields
+        if (isset($data['articles']) && !empty($data['articles']) && !is_string($data['articles'])) {
+            throw new Exception('Articles must be text');
+        }
+        if (isset($data['subscription_pkg']) && !empty($data['subscription_pkg']) && !is_string($data['subscription_pkg'])) {
+            throw new Exception('Subscription package must be text');
+        }
+    }
+
     private function handleRequest(): void
     {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -41,6 +93,7 @@ class Dashboard
         try {
             switch ($action) {
                 case 'add_article':
+                    $this->validateArticle($_POST);
                     $this->admin->addArticle(
                         $_POST['name'],
                         $_POST['description'],
@@ -51,6 +104,7 @@ class Dashboard
                     break;
 
                 case 'edit_article':
+                    $this->validateArticle($_POST);
                     $this->admin->updateArticle(
                         (int)$_POST['id'],
                         $_POST['name'],
@@ -67,6 +121,7 @@ class Dashboard
                     break;
 
                 case 'add_subscription':
+                    $this->validateSubscription($_POST);
                     $this->admin->addSubscription(
                         $_POST['description'],
                         (int)$_POST['price'],
@@ -76,6 +131,7 @@ class Dashboard
                     break;
 
                 case 'edit_subscription':
+                    $this->validateSubscription($_POST);
                     $this->admin->updateSubscription(
                         (int)$_POST['id'],
                         $_POST['description'],
@@ -91,6 +147,7 @@ class Dashboard
                     break;
 
                 case 'add_order':
+                    $this->validateOrder($_POST);
                     $this->admin->addOrder(
                         (int)$_POST['order_number'],
                         $_POST['customer_phone'],
@@ -103,6 +160,7 @@ class Dashboard
                     break;
 
                 case 'edit_order':
+                    $this->validateOrder($_POST);
                     $this->admin->updateOrder(
                         (int)$_POST['id'],
                         (int)$_POST['order_number'],

@@ -1,0 +1,26 @@
+// Utility classes
+.u-text-center {
+  text-align: center;
+}
+
+.u-text-left {
+  text-align: left;
+}
+
+.u-text-right {
+  text-align: right;
+}
+
+.u-mt-0 { margin-top: 0; }
+.u-mt-sm { margin-top: $spacing-sm; }
+.u-mt-md { margin-top: $spacing-md; }
+.u-mt-lg { margin-top: $spacing-lg; }
+
+.u-mb-0 { margin-bottom: 0; }
+.u-mb-sm { margin-bottom: $spacing-sm; }
+.u-mb-md { margin-bottom: $spacing-md; }
+.u-mb-lg { margin-bottom: $spacing-lg; }
+
+.u-p-sm { padding: $spacing-sm; }
+.u-p-md { padding: $spacing-md; }
+.u-p-lg { padding: $spacing-lg; }

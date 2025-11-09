@@ -1,0 +1,27 @@
+// Base element styles
+body {
+  background-color: $color-gray-light;
+  min-height: 100vh;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 600;
+  line-height: 1.2;
+  margin-bottom: $spacing-sm;
+}
+
+h1 {
+  font-size: $font-size-xlarge * 1.5;
+}
+
+h2 {
+  font-size: $font-size-xlarge;
+}
+
+h3 {
+  font-size: $font-size-large;
+}
+
+p {
+  margin-bottom: $spacing-sm;
+}

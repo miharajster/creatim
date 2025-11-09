@@ -201,16 +201,15 @@ $orders = $dashboard->getOrders();
                     </div>
                     
                     <div class="c-form__group">
-                        <label class="c-form__label">Customer Phone *</label>
-                        <input type="text" name="customer_phone" id="orderPhone" class="c-form__input" required>
+                        <label class="c-form__label">Customer Phone</label>
+                        <input type="text" name="customer_phone" id="orderPhone" class="c-form__input">
                     </div>
                     
                     <div class="c-form__group">
                         <label class="c-form__label">Status *</label>
                         <select name="status" id="orderStatus" class="c-form__select" required>
-                            <option value="pending">Pending</option>
-                            <option value="completed">Completed</option>
-                            <option value="cancelled">Cancelled</option>
+                            <option value="NEEDS TO BE PROCESSED">NEEDS TO BE PROCESSED</option>
+                            <option value="PROCESSED">PROCESSED</option>
                         </select>
                     </div>
                     

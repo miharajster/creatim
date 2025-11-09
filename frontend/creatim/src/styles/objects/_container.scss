@@ -1,0 +1,19 @@
+// Layout objects
+.o-container {
+  max-width: $max-width-container;
+  margin: 0 auto;
+  padding: 0 $spacing-md;
+}
+
+.o-grid {
+  display: grid;
+  gap: $spacing-md;
+}
+
+.o-grid--2 {
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+}
+
+.o-grid--3 {
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+}

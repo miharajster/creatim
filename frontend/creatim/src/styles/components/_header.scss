@@ -1,0 +1,49 @@
+// Header component
+.c-header {
+  background-color: $color-white;
+  box-shadow: $box-shadow;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  
+  &__container {
+    @include flex-between;
+    max-width: $max-width-container;
+    margin: 0 auto;
+    padding: $spacing-md;
+  }
+  
+  &__logo {
+    font-size: $font-size-xlarge;
+    font-weight: bold;
+    color: $color-primary;
+  }
+  
+  &__cart-btn {
+    @include button($color-primary);
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: $spacing-xs;
+    
+    i {
+      font-size: $font-size-large;
+    }
+  }
+  
+  &__badge {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background-color: $color-accent;
+    color: $color-white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: bold;
+  }
+}
