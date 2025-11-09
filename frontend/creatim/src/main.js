@@ -5,7 +5,7 @@ import store from './store'
 import './styles/main.scss'
 import '@fortawesome/fontawesome-free/css/all.css'
 import Cookies from 'js-cookie'
-import { loadCartFromServer, createNewSession } from './utils/session'
+import { loadCartFromServer, createNewSession } from './utils/session' // createNewSession only for no-cookies case
 
 const app = createApp(App)
 app.use(router)
@@ -35,27 +35,19 @@ app.use(store)
         
         // Check if cart is submitted
         if (result.submitted) {
-          console.log('Cart was submitted, creating new session...')
-          // Cart was submitted, create new session and clear cart
-          const newSession = await createNewSession()
-          if (newSession) {
-            store.dispatch('setSession', newSession)
-            store.dispatch('loadCartFromServer', [])
-            store.commit('SET_PHONE', null)
-            session = newSession
-          } else {
-            console.error('Failed to create new session after submitted cart')
-            session = null
-          }
+          console.log('Cart was submitted, clearing local cart.')
+          // Just clear local cart - backend will auto-reset on next update
+          store.commit('CLEAR_CART')
         } else {
           // Load cart data if not submitted
           if (result.cart && result.cart.length > 0) {
             store.dispatch('loadCartFromServer', result.cart)
           }
-          // Load phone from server
-          if (result.phone) {
-            store.commit('SET_PHONE', result.phone)
-          }
+        }
+        
+        // Load phone from server (regardless of cart submitted status)
+        if (result.phone) {
+          store.commit('SET_PHONE', result.phone)
         }
         
         // Fetch purchases from purchases.php

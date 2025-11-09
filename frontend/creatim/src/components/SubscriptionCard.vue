@@ -6,8 +6,8 @@
     <button 
       @click="addToCart" 
       class="c-card__button" 
-      :class="{ 'in-cart': isInCart, 'added': isAdded, 'subscribed': isPurchased }"
-      :disabled="isInCart">
+      :class="{ 'in-cart': isInCart && !isPurchased, 'added': isAdded, 'subscribed': isPurchased }"
+      :disabled="isInCart && !isPurchased">
       <i :class="isPurchased ? 'fa fa-star' : (isInCart ? 'fa fa-check-circle' : (isAdded ? 'fa fa-check' : 'fa fa-cart-plus'))"></i>
       {{ isPurchased ? 'Subscribed' : (isInCart ? 'In Cart' : (isAdded ? 'Added!' : 'Add to Cart')) }}
     </button>
@@ -39,8 +39,10 @@ export default {
     });
     
     const addToCart = () => {
-      if (isInCart.value || isPurchased.value) return;
+      // Don't add if already purchased
+      if (isPurchased.value) return;
       
+      // Always allow adding subscription (will replace any existing one)
       store.dispatch('addSubscriptionToCart', props.subscription.id);
       
       // Show feedback

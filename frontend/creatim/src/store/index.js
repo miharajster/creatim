@@ -1,5 +1,5 @@
 import { createStore } from 'vuex';
-import { updateCartOnServer, createNewSession } from '../utils/session';
+import { updateCartOnServer } from '../utils/session';
 import axios from 'axios';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -43,7 +43,7 @@ export default createStore({
       return state.cart.articles.some(item => item.id === articleId);
     },
     isSubscriptionInCart: (state) => (subscriptionId) => {
-      return state.cart.subscriptions.some(item => item.id === subscriptionId);
+      return state.cart.subscriptions.some(item => item.id == subscriptionId); // Use == for type coercion
     },
     isArticlePurchased: (state) => (articleId) => {
       return state.purchases.articles.some(article => article.id === articleId);
@@ -78,10 +78,8 @@ export default createStore({
     },
     
     ADD_SUBSCRIPTION_TO_CART(state, subscriptionId) {
-      const existingItem = state.cart.subscriptions.find(item => item.id === subscriptionId);
-      if (!existingItem) {
-        state.cart.subscriptions.push({ id: subscriptionId, amount: 1 });
-      }
+      // Only allow one subscription - replace any existing subscription
+      state.cart.subscriptions = [{ id: subscriptionId, amount: 1 }];
     },
     
     REMOVE_ARTICLE_FROM_CART(state, articleId) {
@@ -122,18 +120,7 @@ export default createStore({
           await updateCartOnServer(state.sessionId, state.pwd, combinedCart, state.phone);
         } catch (error) {
           console.error('Failed to sync cart to server:', error);
-          
-          // Check if error is 403 (cart already submitted)
-          if (error.response && error.response.status === 403) {
-            console.log('Cart was submitted, creating new session...');
-            // Cart was submitted, create new session and clear cart
-            const newSession = await createNewSession();
-            if (newSession) {
-              commit('SET_SESSION', newSession);
-              commit('CLEAR_CART');
-              commit('SET_PHONE', null);
-            }
-          }
+          // Backend will auto-reset submitted carts, so no special handling needed
         }
       }
     },
@@ -163,13 +150,40 @@ export default createStore({
       await dispatch('syncCartToServer');
     },
     
-    loadCartFromServer({ commit }, cartData) {
-      // cartData is array from server, we need to identify articles vs subscriptions
-      // For now, load into both until we can identify item types
-      commit('LOAD_CART', { 
-        articles: cartData || [], 
-        subscriptions: []
-      });
+    async loadCartFromServer({ commit }, cartData) {
+      if (!cartData || cartData.length === 0) {
+        commit('LOAD_CART', { articles: [], subscriptions: [] });
+        return;
+      }
+
+      const articles = [];
+      const subscriptions = [];
+
+      // Identify each item by fetching from API
+      for (const item of cartData) {
+        try {
+          // Try articles first
+          const articleResponse = await axios.get(`${API_BASE_URL}articles.php?id=${item.id}`);
+          if (articleResponse.data.success) {
+            articles.push(item);
+            continue;
+          }
+        } catch (e) {
+          // Not an article, try subscription
+        }
+
+        try {
+          // Try subscriptions
+          const subResponse = await axios.get(`${API_BASE_URL}subscriptions.php?id=${item.id}`);
+          if (subResponse.data.success) {
+            subscriptions.push(item);
+          }
+        } catch (e) {
+          console.error('Item not found in articles or subscriptions:', item.id);
+        }
+      }
+
+      commit('LOAD_CART', { articles, subscriptions });
     },
     
     async clearCart({ commit, dispatch }) {
@@ -183,14 +197,11 @@ export default createStore({
       }
       
       try {
+        // Only send session_id and pwd (no phone required)
         const params = {
           session_id: state.sessionId,
           pwd: state.pwd
         };
-        
-        if (state.phone) {
-          params.phone = state.phone;
-        }
         
         const response = await axios.get(`${API_BASE_URL}purchases.php`, { params });
         

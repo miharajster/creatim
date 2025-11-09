@@ -168,30 +168,21 @@ class Order
      * Get purchases (processed orders) for a session
      * @param string $sessionId
      * @param string $pwd
-     * @param string|null $phone
      * @return array|null Returns formatted purchases or null if no match
      */
-    public function getPurchases(string $sessionId, string $pwd, ?string $phone = null): ?array
+    public function getPurchases(string $sessionId, string $pwd): ?array
     {
         // Validate session
         if (!$this->cart->validate($sessionId, $pwd)) {
             return null;
         }
 
-        // Build query - check for PROCESSED orders
-        $sql = 'SELECT * FROM orders WHERE session_id = :session_id AND status = :status';
+        // Build query - check for PROCESSED orders (by session_id only)
+        $sql = 'SELECT * FROM orders WHERE session_id = :session_id AND status = :status ORDER BY date_created DESC';
         $params = [
             ':session_id' => $sessionId,
             ':status' => 'PROCESSED'
         ];
-
-        // Add phone filter if provided
-        if ($phone !== null) {
-            $sql .= ' AND customer_phone = :phone';
-            $params[':phone'] = $phone;
-        }
-
-        $sql .= ' ORDER BY date_created DESC';
 
         $stmt = $this->db->prepare($sql);
         foreach ($params as $key => $value) {

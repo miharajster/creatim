@@ -68,6 +68,16 @@ try {
         $customerPhone = $input['customer_phone'];
     }
     
+    // Phone is required for order submission
+    if (empty($customerPhone)) {
+        sendError(400, 'Phone number is required to submit an order');
+    }
+    
+    // Validate phone is numeric only
+    if (!ctype_digit((string)$customerPhone)) {
+        sendError(400, 'Phone number must contain only digits');
+    }
+    
     // Create order
     $order = new Order();
     $result = $order->submitOrder($sessionId, $pwd, $customerPhone);

@@ -40,7 +40,7 @@
           </div>
           
           <div class="phone-form">
-            <h3 class="phone-form__title">Contact Information</h3>
+            <h3 class="phone-form__title">Contact Information <span style="color: #ff6b6b;">*</span></h3>
             <form @submit.prevent="submitPhone" class="phone-form__container">
               <div class="phone-form__input-group">
                 <i class="fa fa-phone"></i>
@@ -201,7 +201,15 @@ export default {
     
     const removeItem = (itemId) => {
       if (confirm('Remove this item from cart?')) {
-        store.dispatch('removeFromCart', itemId);
+        // Check if item is in articles or subscriptions
+        const isInArticles = store.getters.isArticleInCart(itemId);
+        const isInSubscriptions = store.getters.isSubscriptionInCart(itemId);
+        
+        if (isInArticles) {
+          store.dispatch('removeArticleFromCart', itemId);
+        } else if (isInSubscriptions) {
+          store.dispatch('removeSubscriptionFromCart', itemId);
+        }
       }
     };
     

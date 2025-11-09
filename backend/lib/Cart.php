@@ -127,13 +127,32 @@ class Cart
             return false;
         }
 
-        // Check if cart is already submitted
+        // Check if cart is already submitted - if so, reset it first
         if ($this->isSubmitted($session, $pwd)) {
+            $this->resetSubmittedCart($session, $pwd);
+        }
+
+        $stmt = $this->db->prepare('UPDATE carts SET cart = :cart, date_modified = datetime("now") WHERE session = :session AND pwd = :pwd');
+        $stmt->bindValue(':cart', $cartData, PDO::PARAM_STR);
+        $stmt->bindValue(':session', $session, PDO::PARAM_STR);
+        $stmt->bindValue(':pwd', $pwd, PDO::PARAM_STR);
+        
+        return $stmt->execute();
+    }
+
+    /**
+     * Reset a submitted cart (allows new orders with same session)
+     * @param string $session
+     * @param string $pwd
+     * @return bool
+     */
+    public function resetSubmittedCart(string $session, string $pwd): bool
+    {
+        if (!$this->validate($session, $pwd)) {
             return false;
         }
 
-        $stmt = $this->db->prepare('UPDATE carts SET cart = :cart, date_modified = datetime("now") WHERE session = :session AND pwd = :pwd AND submitted = 0');
-        $stmt->bindValue(':cart', $cartData, PDO::PARAM_STR);
+        $stmt = $this->db->prepare('UPDATE carts SET submitted = 0, cart = "", date_modified = datetime("now") WHERE session = :session AND pwd = :pwd');
         $stmt->bindValue(':session', $session, PDO::PARAM_STR);
         $stmt->bindValue(':pwd', $pwd, PDO::PARAM_STR);
         

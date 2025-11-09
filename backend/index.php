@@ -201,7 +201,7 @@ $orders = $dashboard->getOrders();
                     </div>
                     
                     <div class="c-form__group">
-                        <label class="c-form__label">Customer Phone</label>
+                        <label class="c-form__label">Customer Phone *</label>
                         <input type="text" name="customer_phone" id="orderPhone" class="c-form__input">
                     </div>
                     

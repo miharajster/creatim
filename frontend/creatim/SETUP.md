@@ -56,8 +56,13 @@ src/styles/
 ✅ **Session Management** - Reads cookies on refresh, fetches cart and purchases if exists, creates new session if not
 ✅ **Database Cart Storage** - Cart items stored in database, no cookie storage
 ✅ **Cart Badge** - Shows total item count (sum of all amounts) in header
-✅ **Add to Cart** - Adds item to cart (only one of each item allowed)
+✅ **Add to Cart** - Adds item to cart
+  - Articles: Multiple articles allowed (one of each type)
+  - Subscriptions: Only one subscription allowed (latest replaces previous)
 ✅ **In Cart Detection** - Button changes to "In Cart" and disables when item already added
+  - Articles: Shows "In Cart" when article ID found in cart.articles
+  - Subscriptions: Shows "In Cart" when subscription ID found in cart.subscriptions
+  - Cart loaded from server automatically identifies item types via API lookup
 ✅ **Font Awesome Icons** - Cart icon and button icons
 ✅ **Axios Integration** - Fetches articles and subscriptions from backend
 ✅ **EUR Currency** - Prices displayed with € symbol, converted from cents (price/100)
@@ -149,21 +154,22 @@ All cart operations (add, remove, update amount, clear) automatically update:
 
 When "Checkout" button is pressed:
 1. Validates session credentials exist
-2. Validates phone number exists and is numeric
+2. Validates phone number exists and is numeric (frontend)
 3. Sends POST request to `order.php` with session_id and pwd
-4. Backend validates credentials and cart contents
-5. Backend uses phone from cart database
-6. Backend calculates total price from articles/subscriptions
-7. Backend marks cart as submitted (submitted = 1)
-8. Backend creates order row with status "NEEDS TO BE PROCESSED"
+4. Backend validates session credentials (session_id + pwd only)
+5. Backend retrieves phone from cart database (required)
+6. Backend returns 400 error if phone is empty
+7. Backend calculates total price from articles/subscriptions
+8. Backend marks cart as submitted (submitted = 1)
+9. Backend creates order row with status "NEEDS TO BE PROCESSED"
 9. Frontend shows alerts:
    - **Success**: "Ordered successfully"
    - **Error**: "Error in processing order, try later"
 10. On success:
    - Clears local cart state in Vuex (no server sync needed)
    - Cart row is already marked submitted=1 by backend
-   - No new session created immediately
-   - When user adds next item, 403 error triggers automatic new session creation
+   - Session and credentials remain unchanged
+   - User can continue using same session for viewing purchases
 
 ### Purchases System
 
@@ -172,8 +178,8 @@ When "Checkout" button is pressed:
 **How It Works:**
 1. Frontend fetches purchases on page load and every 10 seconds
 2. Backend queries orders table for `status = "PROCESSED"`
-3. Filters by `session_id`, `pwd`, and optionally `phone`
-4. Returns:
+3. Validates only `session_id` and `pwd` (phone not checked)
+4. Returns ALL processed orders for the session:
    - **Articles**: Aggregated from ALL processed orders (amounts summed)
    - **Subscriptions**: From LATEST processed order only (most recent by date)
 5. Frontend updates Vuex state with purchase data
@@ -235,21 +241,26 @@ When "Checkout" button is pressed:
 
 ### Security & Cart Protection
 
-**Submitted Cart Protection:**
-- Once a cart is submitted (order placed), it **cannot be modified**
-- `Cart::isSubmitted()` checks if cart has `submitted = 1`
-- `Cart::updateCart()` rejects updates to submitted carts
-- API returns **403 Forbidden**: "Cannot update cart. This cart has already been submitted."
-- Database constraint: `UPDATE ... WHERE submitted = 0` ensures protection at SQL level
+**Submitted Cart Auto-Reset:**
+- When cart is submitted (order placed), it's marked with `submitted = 1`
+- Orders are permanently linked to the submitted cart state snapshot
+- When user tries to add new items, backend automatically resets the cart:
+  - `Cart::updateCart()` detects `submitted = 1`
+  - Calls `resetSubmittedCart()` to set `submitted = 0` and clear cart
+  - Then proceeds with normal cart update
+  - Previous order remains in orders table with original cart snapshot
+- No 403 errors - backend handles reset transparently
+- Session credentials remain unchanged (no new session created)
+- User can place unlimited orders with the same session
+- Frontend: On page load with submitted cart, clears local cart
 - API includes `submitted` field in cart responses (0 or 1)
 
-**Auto-Session Refresh on Submitted Cart:**
-- When loading cart from server, frontend checks `submitted` field
-- If `submitted === 1`, automatically triggers new session creation
-- New session credentials (SessionId and pwd) written to cookies
-- Cart state cleared in Vuex
-- User seamlessly starts with fresh cart without manual intervention
-- Also handles 403 errors during cart operations (e.g., if user tries to add items to submitted cart)
+**Session Persistence After Order:**
+- Session credentials (SessionId and pwd) remain unchanged after checkout
+- User keeps same session to view their purchases
+- Cart is cleared locally but session is not regenerated
+- Purchases are tied to session_id and phone number
+- User can see their order status and purchased content with same session
 
 **Security Features:**
 ✅ Session validation required for all cart/order operations

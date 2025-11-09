@@ -83,10 +83,7 @@ try {
         $cartData = $input['cart'];
         $phone = $input['phone'] ?? null;
         
-        // Check if cart is already submitted
-        if ($cart->isSubmitted($sessionId, $pwd)) {
-            sendError(403, 'Cannot update cart. This cart has already been submitted.');
-        }
+        // Note: Cart auto-resets if submitted (handled in Cart::updateCart())
         
         // Validate phone if provided
         if ($phone !== null && !empty($phone) && !ctype_digit($phone)) {
