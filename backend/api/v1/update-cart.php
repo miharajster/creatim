@@ -7,7 +7,7 @@ require_once __DIR__ . '/../../lib/Whitelist.php';
 
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, POST');
+header('Access-Control-Allow-Methods: POST');
 header('Access-Control-Allow-Headers: Content-Type');
 
 // Handle preflight
@@ -39,47 +39,25 @@ $method = $_SERVER['REQUEST_METHOD'];
 $cartWhitelist = ['cart', 'date_modified', 'submitted', 'phone', 'message'];
 
 try {
+    if ($method !== 'POST') {
+        sendError(405, 'Method not allowed. Only POST requests are supported.');
+    }
+    
     $cart = new Cart();
     
-    if ($method === 'GET') {
-        // Read cart - validate session and pwd from query params
-        if (!isset($_GET['session_id']) || !isset($_GET['pwd'])) {
-            sendError(400, 'Missing session_id or pwd parameters');
-        }
-        
-        $sessionId = $_GET['session_id'];
-        $pwd = $_GET['pwd'];
-        
-        $cartData = $cart->getCart($sessionId, $pwd);
-        
-        if ($cartData === null) {
-            sendError(401, 'Invalid session credentials');
-        }
-        
-        $response = [
-            'cart' => $cartData['cart'],
-            'date_modified' => $cartData['date_modified'],
-            'submitted' => (int)$cartData['submitted'],
-            'phone' => $cartData['phone'] ? (int)$cartData['phone'] : null
-        ];
-        
-        $response = Whitelist::apply($response, $cartWhitelist);
-        sendSuccess($response);
-        
-    } elseif ($method === 'POST') {
-        // Update cart - validate and update
-        $input = json_decode(file_get_contents('php://input'), true);
-        
-        if (!isset($input['session_id']) || !isset($input['pwd'])) {
-            sendError(400, 'Missing session_id or pwd in request body');
-        }
-        
-        if (!isset($input['cart'])) {
-            sendError(400, 'Missing cart data in request body');
-        }
-        
-        $sessionId = $input['session_id'];
-        $pwd = $input['pwd'];
+    // Parse input
+    $input = json_decode(file_get_contents('php://input'), true);
+    
+    if (!isset($input['session_id']) || !isset($input['pwd'])) {
+        sendError(400, 'Missing session_id or pwd in request body');
+    }
+    
+    $sessionId = $input['session_id'];
+    $pwd = $input['pwd'];
+    
+    // Determine operation: if 'cart' is present, it's an update; otherwise, it's a read
+    if (isset($input['cart'])) {
+        // Update cart operation
         $cartData = $input['cart'];
         $phone = $input['phone'] ?? null;
         
@@ -116,7 +94,22 @@ try {
         sendSuccess($response);
         
     } else {
-        sendError(405, 'Method not allowed. Only GET and POST requests are supported.');
+        // Read cart operation
+        $cartData = $cart->getCart($sessionId, $pwd);
+        
+        if ($cartData === null) {
+            sendError(401, 'Invalid session credentials');
+        }
+        
+        $response = [
+            'cart' => $cartData['cart'],
+            'date_modified' => $cartData['date_modified'],
+            'submitted' => (int)$cartData['submitted'],
+            'phone' => $cartData['phone'] ? (int)$cartData['phone'] : null
+        ];
+        
+        $response = Whitelist::apply($response, $cartWhitelist);
+        sendSuccess($response);
     }
 } catch (Exception $e) {
     sendError(500, 'Internal server error: ' . $e->getMessage());

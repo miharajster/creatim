@@ -198,12 +198,12 @@ export default createStore({
       
       try {
         // Only send session_id and pwd (no phone required)
-        const params = {
+        const payload = {
           session_id: state.sessionId,
           pwd: state.pwd
         };
         
-        const response = await axios.get(`${API_BASE_URL}purchases.php`, { params });
+        const response = await axios.post(`${API_BASE_URL}purchases.php`, payload);
         
         if (response.data.success) {
           commit('SET_PURCHASES', response.data.data);

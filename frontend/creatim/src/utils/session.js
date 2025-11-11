@@ -24,8 +24,9 @@ export async function initializeSession() {
 }
 
 export async function validateSession(sessionId, pwd) {
-  const response = await axios.get(`${API_BASE_URL}update-cart.php`, {
-    params: { session_id: sessionId, pwd }
+  const response = await axios.post(`${API_BASE_URL}update-cart.php`, {
+    session_id: sessionId,
+    pwd
   });
   return response.data;
 }
@@ -58,8 +59,9 @@ export async function updateCartOnServer(sessionId, pwd, cartData, phone = null)
 
 export async function loadCartFromServer(sessionId, pwd) {
   try {
-    const response = await axios.get(`${API_BASE_URL}update-cart.php`, {
-      params: { session_id: sessionId, pwd }
+    const response = await axios.post(`${API_BASE_URL}update-cart.php`, {
+      session_id: sessionId,
+      pwd
     });
     if (response.data.success) {
       const cartString = response.data.data.cart;

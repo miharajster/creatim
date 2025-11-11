@@ -7,7 +7,7 @@ require_once __DIR__ . '/../../lib/Whitelist.php';
 
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET');
+header('Access-Control-Allow-Methods: POST');
 header('Access-Control-Allow-Headers: Content-Type');
 
 function sendError(int $statusCode, string $message): never
@@ -32,19 +32,28 @@ $method = $_SERVER['REQUEST_METHOD'];
 // Whitelist for purchases response
 $purchasesWhitelist = ['articles', 'subscriptions'];
 
+// Handle preflight
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit;
+}
+
 try {
-    if ($method !== 'GET') {
-        sendError(405, 'Method not allowed. Only GET requests are supported.');
+    if ($method !== 'POST') {
+        sendError(405, 'Method not allowed. Only POST requests are supported.');
     }
+    
+    // Parse input
+    $input = json_decode(file_get_contents('php://input'), true);
     
     // Validate required parameters
-    if (!isset($_GET['session_id']) || !isset($_GET['pwd'])) {
-        sendError(400, 'Missing session_id or pwd parameters');
+    if (!isset($input['session_id']) || !isset($input['pwd'])) {
+        sendError(400, 'Missing session_id or pwd in request body');
     }
     
-    $sessionId = $_GET['session_id'];
-    $pwd = $_GET['pwd'];
-    $phone = $_GET['phone'] ?? null;
+    $sessionId = $input['session_id'];
+    $pwd = $input['pwd'];
+    $phone = $input['phone'] ?? null;
     
     // Get purchases
     $order = new Order();
