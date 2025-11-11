@@ -299,8 +299,9 @@ export default {
         });
         
         // Refresh state from API
-        const response = await axios.get(`${API_BASE_URL}update-cart.php`, {
-          params: { session_id: sessionId, pwd: pwd }
+        const response = await axios.post(`${API_BASE_URL}update-cart.php`, {
+          session_id: sessionId,
+          pwd: pwd
         });
         
         if (response.data.success) {
